@@ -1,8 +1,5 @@
 name: Check upstream for new release
 on:
-  schedule:
-    # check each night at 1 AM
-    - cron: '00 01 * * *'
   workflow_dispatch: {}
 
 jobs:
