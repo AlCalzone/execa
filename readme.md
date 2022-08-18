@@ -17,6 +17,10 @@ npm i execa@npm:@esm2cjs/execa
 }
 ```
 
+> **Note:**
+> We strive to use the same versions as the upstream package, used the wrong commit to publish `6.1.0`.
+> We fixed it, but had to re-publish this version as `6.1.1-cjs.0`.
+
 ## Usage
 
 ```js
