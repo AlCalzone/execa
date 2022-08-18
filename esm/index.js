@@ -3,7 +3,7 @@ import path from 'node:path';
 import childProcess from 'node:child_process';
 import process from 'node:process';
 import crossSpawn from 'cross-spawn';
-import stripFinalNewline from 'strip-final-newline';
+import stripFinalNewline from '@esm2cjs/strip-final-newline';
 import {npmRunPathEnv} from 'npm-run-path';
 import onetime from 'onetime';
 import {makeError} from './lib/error.js';

@@ -4,7 +4,7 @@ This is a fork of https://github.com/sindresorhus/execa, but automatically patch
 
 ## Install
 
-Use an npm alias to install this package under the original name:
+You can use an npm alias to install this package under the original name:
 
 ```
 npm i execa@npm:@esm2cjs/execa
@@ -17,9 +17,22 @@ npm i execa@npm:@esm2cjs/execa
 }
 ```
 
+but `npm` might dedupe this incorrectly when other packages depend on the replaced package. If you can, prefer using the scoped package directly:
+
+```
+npm i @esm2cjs/execa
+```
+
+```jsonc
+// package.json
+"dependencies": {
+    "@esm2cjs/execa": "^ver.si.on"
+}
+```
+
 > **Note:**
-> We strive to use the same versions as the upstream package, used the wrong commit to publish `6.1.0`.
-> We fixed it, but had to re-publish this version as `6.1.1-cjs.0`.
+> We strive to use the same versions as the upstream package, but unfortunately there is a bit of a learning curve with these things.
+> As a result, we had to re-publish `6.1.0` as `6.1.1-cjs.0`.
 
 ## Usage
 

@@ -44,15 +44,15 @@
 		"local"
 	],
 	"dependencies": {
+		"@esm2cjs/human-signals": "^3.0.1",
+		"@esm2cjs/is-stream": "^3.0.0",
+		"@esm2cjs/npm-run-path": "^5.1.1-cjs.0",
+		"@esm2cjs/onetime": "^6.0.1-cjs.0",
+		"@esm2cjs/strip-final-newline": "^3.0.1-cjs.0",
 		"cross-spawn": "^7.0.3",
 		"get-stream": "^6.0.1",
-		"human-signals": "npm:@esm2cjs/human-signals@^3.0.1",
-		"is-stream": "npm:@esm2cjs/is-stream@^3.0.0",
 		"merge-stream": "^2.0.0",
-		"npm-run-path": "npm:@esm2cjs/npm-run-path@^5.1.0",
-		"onetime": "npm:@esm2cjs/onetime@^6.0.0",
-		"signal-exit": "^3.0.7",
-		"strip-final-newline": "npm:@esm2cjs/strip-final-newline@^3.0.1-cjs.0"
+		"signal-exit": "^3.0.7"
 	},
 	"devDependencies": {
 		"@types/node": "^17.0.17",

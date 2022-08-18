@@ -8,6 +8,15 @@ mv index.js esm/index.js
 mv index.d.ts esm/index.d.ts
 mv index.test-d.ts esm/index.test-d.ts
 
+# Replace module imports in all js files
+modules=( human-signals, is-stream, npm-run-path, onetime, strip-final-newline )
+for file in {esm,test}{,/**}/*.js ; do
+	for mod in "${modules[@]}" ; do
+		sed -i "s#'$mod'#'@esm2cjs/$mod'#g" "$file"
+	done
+done
+
+
 # patch test files to be ESM and look in the right places
 for file in test{,/**}/*.js ; do
 	sed -i "s#.js#.mjs#g" "$file"
@@ -38,13 +47,34 @@ PJSON=$(cat package.json | jq --tab '
 	| .typesVersions["*"]["cjs/index.d.ts"] = ["esm/index.d.ts"]
 	| .typesVersions["*"]["*"] = ["esm/*"]
 	| .scripts["to-cjs"] = "esm2cjs --in esm --out cjs -t node12"
-	| if (.dependencies["human-signals"] | (. == "^4.1.0" or . == "^4.2.0")) then (.dependencies["human-signals"] = "npm:@esm2cjs/human-signals@^4.2.1-cjs.0") else (.dependencies["human-signals"] |= "npm:@esm2cjs/human-signals@" + .) end
-	| .dependencies["is-stream"] |= "npm:@esm2cjs/is-stream@" + .
-	| if (.dependencies["mimic-fn"]) then (.dependencies["mimic-fn"] |= "npm:@esm2cjs/mimic-fn@" + .) else . end
-	| .dependencies["npm-run-path"] |= "npm:@esm2cjs/npm-run-path@" + .
-	| .dependencies["onetime"] |= "npm:@esm2cjs/onetime@" + .
-	| if (.dependencies["strip-final-newline"] == "^3.0.0") then (.dependencies["strip-final-newline"] = "npm:@esm2cjs/strip-final-newline@^3.0.1-cjs.0") else (.dependencies["strip-final-newline"] |= "npm:@esm2cjs/strip-final-newline@" + .) end
-	| if (.devDependencies["path-key"]) then (.devDependencies["path-key"] |= "npm:@esm2cjs/path-key@" + .) else . end
+	| if (.dependencies["human-signals"] | (. == "^4.1.0" or . == "^4.2.0")) then (
+		.dependencies["@esm2cjs/human-signals"] = "^4.2.1-cjs.0"
+	) else (
+		.dependencies["@esm2cjs/human-signals"] = .dependencies["human-signals"]
+	) end
+	| del(.dependencies["human-signals"])
+	| .dependencies["@esm2cjs/is-stream"] = .dependencies["is-stream"]
+	| del(.dependencies["is-stream"])
+	| if (.dependencies["npm-run-path"] == "^5.1.0") then (
+		.dependencies["@esm2cjs/npm-run-path"] = "^5.1.1-cjs.0"
+	) else (
+		.dependencies["@esm2cjs/npm-run-path"] = .dependencies["npm-run-path"]
+	) end
+	| del(.dependencies["npm-run-path"])
+	| if (.dependencies["onetime"] == "^6.0.0") then (
+		.dependencies["@esm2cjs/onetime"] = "^6.0.1-cjs.0"
+	) else (
+		.dependencies["@esm2cjs/onetime"] = .dependencies["onetime"]
+	) end
+	| del(.dependencies["onetime"])
+	| if (.dependencies["strip-final-newline"] == "^3.0.0") then (
+		.dependencies["@esm2cjs/strip-final-newline"] = "^3.0.1-cjs.0"
+	) else (
+		.dependencies["@esm2cjs/strip-final-newline"] = .dependencies["strip-final-newline"]
+	) end
+	| del(.dependencies["strip-final-newline"])
+	| if (.devDependencies["path-key"]) then (.devDependencies["@esm2cjs/path-key"] = .devDependencies["path-key"]) else . end
+	| del(.devDependencies["path-key"])
 	| .xo = {ignores: ["cjs", "**/*.test-d.ts", "**/*.d.ts", "test/fixtures"]}
 ')
 echo "$PJSON" > package.json
