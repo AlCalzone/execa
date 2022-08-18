@@ -1,20 +1,21 @@
+import path from 'node:path';
 import process from 'node:process';
 import childProcess from 'node:child_process';
+import {fileURLToPath} from 'node:url';
 import {promisify} from 'node:util';
 import test from 'ava';
-import {execa, execaSync} from '../index.js';
-import {setFixtureDir} from './helpers/fixtures-dir.js';
+import {execa, execaSync} from '../esm/index.js';
 
 const pExec = promisify(childProcess.exec);
 
-setFixtureDir();
+process.env.PATH = fileURLToPath(new URL('fixtures', import.meta.url)) + path.delimiter + process.env.PATH;
 
 const TIMEOUT_REGEXP = /timed out after/;
 
 const getExitRegExp = exitMessage => new RegExp(`failed with exit code ${exitMessage}`);
 
 test('stdout/stderr/all available on errors', async t => {
-	const {stdout, stderr, all} = await t.throwsAsync(execa('exit.js', ['2'], {all: true}), {message: getExitRegExp('2')});
+	const {stdout, stderr, all} = await t.throwsAsync(execa('exit.mjs', ['2'], {all: true}), {message: getExitRegExp('2')});
 	t.is(typeof stdout, 'string');
 	t.is(typeof stderr, 'string');
 	t.is(typeof all, 'string');
@@ -41,12 +42,12 @@ test('stdout/stderr/all on process errors, in sync mode', t => {
 });
 
 test('exitCode is 0 on success', async t => {
-	const {exitCode} = await execa('noop.js', ['foo']);
+	const {exitCode} = await execa('noop.mjs', ['foo']);
 	t.is(exitCode, 0);
 });
 
 const testExitCode = async (t, number) => {
-	const {exitCode} = await t.throwsAsync(execa('exit.js', [`${number}`]), {message: getExitRegExp(number)});
+	const {exitCode} = await t.throwsAsync(execa('exit.mjs', [`${number}`]), {message: getExitRegExp(number)});
 	t.is(exitCode, number);
 };
 
@@ -55,44 +56,47 @@ test('exitCode is 3', testExitCode, 3);
 test('exitCode is 4', testExitCode, 4);
 
 test('error.message contains the command', async t => {
-	await t.throwsAsync(execa('exit.js', ['2', 'foo', 'bar']), {message: /exit.js 2 foo bar/});
+	await t.throwsAsync(execa('exit.mjs', ['2', 'foo', 'bar']), {message: /exit.mjs 2 foo bar/});
 });
 
 test('error.message contains stdout/stderr if available', async t => {
-	const {message} = await t.throwsAsync(execa('echo-fail.js'));
+	const {message} = await t.throwsAsync(execa('echo-fail.mjs'));
 	t.true(message.includes('stderr'));
 	t.true(message.includes('stdout'));
 });
 
 test('error.message does not contain stdout/stderr if not available', async t => {
-	const {message} = await t.throwsAsync(execa('echo-fail.js', {stdio: 'ignore'}));
+	const {message} = await t.throwsAsync(execa('echo-fail.mjs', {stdio: 'ignore'}));
 	t.false(message.includes('stderr'));
 	t.false(message.includes('stdout'));
 });
 
 test('error.shortMessage does not contain stdout/stderr', async t => {
-	const {shortMessage} = await t.throwsAsync(execa('echo-fail.js'));
+	const {shortMessage} = await t.throwsAsync(execa('echo-fail.mjs'));
 	t.false(shortMessage.includes('stderr'));
 	t.false(shortMessage.includes('stdout'));
 });
 
 test('Original error.message is kept', async t => {
-	const {originalMessage} = await t.throwsAsync(execa('noop.js', {cwd: 1}));
-	t.true(originalMessage.startsWith('The "options.cwd" property must be of type string or an instance of Buffer or URL. Received type number'));
+	const {originalMessage} = await t.throwsAsync(execa('noop.mjs', {cwd: 1}));
+	// On Node >=14.18.0, the error message is
+	// `The "options.cwd" property must be of type string or an instance of Buffer or URL. Received type number (1)`
+	t.true(originalMessage.startsWith('The "options.cwd" property must be of type string'));
+	t.true(originalMessage.includes('. Received type number'));
 });
 
 test('failed is false on success', async t => {
-	const {failed} = await execa('noop.js', ['foo']);
+	const {failed} = await execa('noop.mjs', ['foo']);
 	t.false(failed);
 });
 
 test('failed is true on failure', async t => {
-	const {failed} = await t.throwsAsync(execa('exit.js', ['2']));
+	const {failed} = await t.throwsAsync(execa('exit.mjs', ['2']));
 	t.true(failed);
 });
 
 test('error.killed is true if process was killed directly', async t => {
-	const subprocess = execa('noop.js');
+	const subprocess = execa('noop.mjs');
 
 	subprocess.kill();
 
@@ -101,23 +105,23 @@ test('error.killed is true if process was killed directly', async t => {
 });
 
 test('error.killed is false if process was killed indirectly', async t => {
-	const subprocess = execa('noop.js');
+	const subprocess = execa('noop.mjs');
 
 	process.kill(subprocess.pid, 'SIGINT');
 
-	// `process.kill()` is emulated by Node.js on Windows
+	// `process.kill()` is emulated by Node.mjs on Windows
 	const message = process.platform === 'win32' ? /failed with exit code 1/ : /was killed with SIGINT/;
 	const {killed} = await t.throwsAsync(subprocess, {message});
 	t.false(killed);
 });
 
 test('result.killed is false if not killed', async t => {
-	const {killed} = await execa('noop.js');
+	const {killed} = await execa('noop.mjs');
 	t.false(killed);
 });
 
 test('result.killed is false if not killed, in sync mode', t => {
-	const {killed} = execaSync('noop.js');
+	const {killed} = execaSync('noop.mjs');
 	t.false(killed);
 });
 
@@ -135,7 +139,7 @@ test('result.killed is false on process error, in sync mode', t => {
 
 if (process.platform === 'darwin') {
 	test('sanity check: child_process.exec also has killed.false if killed indirectly', async t => {
-		const promise = pExec('noop.js');
+		const promise = pExec('noop.mjs');
 
 		process.kill(promise.child.pid, 'SIGINT');
 
@@ -147,7 +151,7 @@ if (process.platform === 'darwin') {
 
 if (process.platform !== 'win32') {
 	test('error.signal is SIGINT', async t => {
-		const subprocess = execa('noop.js');
+		const subprocess = execa('noop.mjs');
 
 		process.kill(subprocess.pid, 'SIGINT');
 
@@ -156,7 +160,7 @@ if (process.platform !== 'win32') {
 	});
 
 	test('error.signalDescription is defined', async t => {
-		const subprocess = execa('noop.js');
+		const subprocess = execa('noop.mjs');
 
 		process.kill(subprocess.pid, 'SIGINT');
 
@@ -165,7 +169,7 @@ if (process.platform !== 'win32') {
 	});
 
 	test('error.signal is SIGTERM', async t => {
-		const subprocess = execa('noop.js');
+		const subprocess = execa('noop.mjs');
 
 		process.kill(subprocess.pid, 'SIGTERM');
 
@@ -174,12 +178,12 @@ if (process.platform !== 'win32') {
 	});
 
 	test('custom error.signal', async t => {
-		const {signal} = await t.throwsAsync(execa('noop.js', {killSignal: 'SIGHUP', timeout: 1, message: TIMEOUT_REGEXP}));
+		const {signal} = await t.throwsAsync(execa('noop.mjs', {killSignal: 'SIGHUP', timeout: 1, message: TIMEOUT_REGEXP}));
 		t.is(signal, 'SIGHUP');
 	});
 
 	test('exitCode is undefined on signal termination', async t => {
-		const subprocess = execa('noop.js');
+		const subprocess = execa('noop.mjs');
 
 		process.kill(subprocess.pid);
 
@@ -189,26 +193,26 @@ if (process.platform !== 'win32') {
 }
 
 test('result.signal is undefined for successful execution', async t => {
-	const {signal} = await execa('noop.js');
+	const {signal} = await execa('noop.mjs');
 	t.is(signal, undefined);
 });
 
 test('result.signal is undefined if process failed, but was not killed', async t => {
-	const {signal} = await t.throwsAsync(execa('exit.js', [2]), {message: getExitRegExp('2')});
+	const {signal} = await t.throwsAsync(execa('exit.mjs', [2]), {message: getExitRegExp('2')});
 	t.is(signal, undefined);
 });
 
 test('result.signalDescription is undefined for successful execution', async t => {
-	const {signalDescription} = await execa('noop.js');
+	const {signalDescription} = await execa('noop.mjs');
 	t.is(signalDescription, undefined);
 });
 
 test('error.code is undefined on success', async t => {
-	const {code} = await execa('noop.js');
+	const {code} = await execa('noop.mjs');
 	t.is(code, undefined);
 });
 
 test('error.code is defined on failure if applicable', async t => {
-	const {code} = await t.throwsAsync(execa('noop.js', {cwd: 1}));
+	const {code} = await t.throwsAsync(execa('noop.mjs', {cwd: 1}));
 	t.is(code, 'ERR_INVALID_ARG_TYPE');
 });

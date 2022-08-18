@@ -4,7 +4,9 @@ import mergeStream from 'merge-stream';
 
 // `input` option
 export const handleInput = (spawned, input) => {
-	if (input === undefined) {
+	// Checking for stdin is workaround for https://github.com/nodejs/node/issues/26852
+	// @todo remove `|| spawned.stdin === undefined` once we drop support for Node.js <=12.2.0
+	if (input === undefined || spawned.stdin === undefined) {
 		return;
 	}
 

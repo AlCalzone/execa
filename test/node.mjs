@@ -1,10 +1,11 @@
+import path from 'node:path';
 import process from 'node:process';
+import {fileURLToPath} from 'node:url';
 import test from 'ava';
 import {pEvent} from 'p-event';
-import {execaNode} from '../index.js';
-import {setFixtureDir} from './helpers/fixtures-dir.js';
+import {execaNode} from '../esm/index.js';
 
-setFixtureDir();
+process.env.PATH = fileURLToPath(new URL('fixtures', import.meta.url)) + path.delimiter + process.env.PATH;
 
 async function inspectMacro(t, input) {
 	const originalArgv = process.execArgv;
@@ -24,12 +25,12 @@ async function inspectMacro(t, input) {
 }
 
 test('node()', async t => {
-	const {exitCode} = await execaNode('test/fixtures/noop.js');
+	const {exitCode} = await execaNode('test/fixtures/noop.mjs');
 	t.is(exitCode, 0);
 });
 
 test('node pipe stdout', async t => {
-	const {stdout} = await execaNode('test/fixtures/noop.js', ['foo'], {
+	const {stdout} = await execaNode('test/fixtures/noop.mjs', ['foo'], {
 		stdout: 'pipe',
 	});
 
@@ -93,7 +94,7 @@ test.serial(
 );
 
 test('node\'s forked script has a communication channel', async t => {
-	const subprocess = execaNode('test/fixtures/send.js');
+	const subprocess = execaNode('test/fixtures/send.mjs');
 	await pEvent(subprocess, 'message');
 
 	subprocess.send('ping');

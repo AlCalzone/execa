@@ -1,16 +1,17 @@
+import path from 'node:path';
 import process from 'node:process';
+import {fileURLToPath} from 'node:url';
 import test from 'ava';
 import {pEvent} from 'p-event';
 import isRunning from 'is-running';
-import {execa, execaSync} from '../index.js';
-import {setFixtureDir} from './helpers/fixtures-dir.js';
+import {execa, execaSync} from '../esm/index.js';
 
-setFixtureDir();
+process.env.PATH = fileURLToPath(new URL('fixtures', import.meta.url)) + path.delimiter + process.env.PATH;
 
 const TIMEOUT_REGEXP = /timed out after/;
 
 test('kill("SIGKILL") should terminate cleanly', async t => {
-	const subprocess = execa('node', ['./test/fixtures/no-killable.js'], {stdio: ['ipc']});
+	const subprocess = execa('node', ['./test/fixtures/no-killable.mjs'], {stdio: ['ipc']});
 	await pEvent(subprocess, 'message');
 
 	subprocess.kill('SIGKILL');
@@ -23,7 +24,7 @@ test('kill("SIGKILL") should terminate cleanly', async t => {
 // Therefore, this feature and those tests do not make sense on Windows.
 if (process.platform !== 'win32') {
 	test('`forceKillAfterTimeout: false` should not kill after a timeout', async t => {
-		const subprocess = execa('node', ['./test/fixtures/no-killable.js'], {stdio: ['ipc']});
+		const subprocess = execa('node', ['./test/fixtures/no-killable.mjs'], {stdio: ['ipc']});
 		await pEvent(subprocess, 'message');
 
 		subprocess.kill('SIGTERM', {forceKillAfterTimeout: false});
@@ -33,7 +34,7 @@ if (process.platform !== 'win32') {
 	});
 
 	test('`forceKillAfterTimeout: number` should kill after a timeout', async t => {
-		const subprocess = execa('node', ['./test/fixtures/no-killable.js'], {stdio: ['ipc']});
+		const subprocess = execa('node', ['./test/fixtures/no-killable.mjs'], {stdio: ['ipc']});
 		await pEvent(subprocess, 'message');
 
 		subprocess.kill('SIGTERM', {forceKillAfterTimeout: 50});
@@ -43,7 +44,7 @@ if (process.platform !== 'win32') {
 	});
 
 	test('`forceKillAfterTimeout: true` should kill after a timeout', async t => {
-		const subprocess = execa('node', ['./test/fixtures/no-killable.js'], {stdio: ['ipc']});
+		const subprocess = execa('node', ['./test/fixtures/no-killable.mjs'], {stdio: ['ipc']});
 		await pEvent(subprocess, 'message');
 
 		subprocess.kill('SIGTERM', {forceKillAfterTimeout: true});
@@ -53,7 +54,7 @@ if (process.platform !== 'win32') {
 	});
 
 	test('kill() with no arguments should kill after a timeout', async t => {
-		const subprocess = execa('node', ['./test/fixtures/no-killable.js'], {stdio: ['ipc']});
+		const subprocess = execa('node', ['./test/fixtures/no-killable.mjs'], {stdio: ['ipc']});
 		await pEvent(subprocess, 'message');
 
 		subprocess.kill();
@@ -64,38 +65,38 @@ if (process.platform !== 'win32') {
 
 	test('`forceKillAfterTimeout` should not be NaN', t => {
 		t.throws(() => {
-			execa('noop.js').kill('SIGTERM', {forceKillAfterTimeout: Number.NaN});
+			execa('noop.mjs').kill('SIGTERM', {forceKillAfterTimeout: Number.NaN});
 		}, {instanceOf: TypeError, message: /non-negative integer/});
 	});
 
 	test('`forceKillAfterTimeout` should not be negative', t => {
 		t.throws(() => {
-			execa('noop.js').kill('SIGTERM', {forceKillAfterTimeout: -1});
+			execa('noop.mjs').kill('SIGTERM', {forceKillAfterTimeout: -1});
 		}, {instanceOf: TypeError, message: /non-negative integer/});
 	});
 }
 
 test('execa() returns a promise with kill()', t => {
-	const {kill} = execa('noop.js', ['foo']);
+	const {kill} = execa('noop.mjs', ['foo']);
 	t.is(typeof kill, 'function');
 });
 
 test('timeout kills the process if it times out', async t => {
-	const {killed, timedOut} = await t.throwsAsync(execa('noop.js', {timeout: 1}), {message: TIMEOUT_REGEXP});
+	const {killed, timedOut} = await t.throwsAsync(execa('noop.mjs', {timeout: 1}), {message: TIMEOUT_REGEXP});
 	t.false(killed);
 	t.true(timedOut);
 });
 
 test('timeout kills the process if it times out, in sync mode', async t => {
 	const {killed, timedOut} = await t.throws(() => {
-		execaSync('noop.js', {timeout: 1, message: TIMEOUT_REGEXP});
+		execaSync('noop.mjs', {timeout: 1, message: TIMEOUT_REGEXP});
 	});
 	t.false(killed);
 	t.true(timedOut);
 });
 
 test('timeout does not kill the process if it does not time out', async t => {
-	const {timedOut} = await execa('delay.js', ['500'], {timeout: 1e8});
+	const {timedOut} = await execa('delay.mjs', ['500'], {timeout: 1e8});
 	t.false(timedOut);
 });
 
@@ -103,34 +104,34 @@ const INVALID_TIMEOUT_REGEXP = /`timeout` option to be a non-negative integer/;
 
 test('timeout must not be negative', async t => {
 	await t.throws(() => {
-		execa('noop.js', {timeout: -1});
+		execa('noop.mjs', {timeout: -1});
 	}, {message: INVALID_TIMEOUT_REGEXP});
 });
 
 test('timeout must be an integer', async t => {
 	await t.throws(() => {
-		execa('noop.js', {timeout: false});
+		execa('noop.mjs', {timeout: false});
 	}, {message: INVALID_TIMEOUT_REGEXP});
 });
 
 test('timedOut is false if timeout is undefined', async t => {
-	const {timedOut} = await execa('noop.js');
+	const {timedOut} = await execa('noop.mjs');
 	t.false(timedOut);
 });
 
 test('timedOut is false if timeout is 0', async t => {
-	const {timedOut} = await execa('noop.js', {timeout: 0});
+	const {timedOut} = await execa('noop.mjs', {timeout: 0});
 	t.false(timedOut);
 });
 
 test('timedOut is false if timeout is undefined and exit code is 0 in sync mode', t => {
-	const {timedOut} = execaSync('noop.js');
+	const {timedOut} = execaSync('noop.mjs');
 	t.false(timedOut);
 });
 
 // When child process exits before parent process
 const spawnAndExit = async (t, cleanup, detached) => {
-	await t.notThrowsAsync(execa('sub-process-exit.js', [cleanup, detached]));
+	await t.notThrowsAsync(execa('sub-process-exit.mjs', [cleanup, detached]));
 };
 
 test('spawnAndExit', spawnAndExit, false, false);
@@ -140,7 +141,7 @@ test('spawnAndExit cleanup detached', spawnAndExit, true, true);
 
 // When parent process exits before child process
 const spawnAndKill = async (t, [signal, cleanup, detached, isKilled]) => {
-	const subprocess = execa('sub-process.js', [cleanup, detached], {stdio: ['ignore', 'ignore', 'ignore', 'ipc']});
+	const subprocess = execa('sub-process.mjs', [cleanup, detached], {stdio: ['ignore', 'ignore', 'ignore', 'ipc']});
 
 	const pid = await pEvent(subprocess, 'message');
 	t.true(Number.isInteger(pid));
@@ -179,7 +180,7 @@ test('removes exit handler on exit', async t => {
 	// @todo this relies on `signal-exit` internals
 	const emitter = process.__signal_exit_emitter__;
 
-	const subprocess = execa('noop.js');
+	const subprocess = execa('noop.mjs');
 	const listener = emitter.listeners('exit').pop();
 
 	await new Promise((resolve, reject) => {
@@ -198,49 +199,49 @@ test('cancel method kills the subprocess', t => {
 });
 
 test('result.isCanceled is false when spawned.cancel() isn\'t called (success)', async t => {
-	const {isCanceled} = await execa('noop.js');
+	const {isCanceled} = await execa('noop.mjs');
 	t.false(isCanceled);
 });
 
 test('result.isCanceled is false when spawned.cancel() isn\'t called (failure)', async t => {
-	const {isCanceled} = await t.throwsAsync(execa('fail.js'));
+	const {isCanceled} = await t.throwsAsync(execa('fail.mjs'));
 	t.false(isCanceled);
 });
 
 test('result.isCanceled is false when spawned.cancel() isn\'t called in sync mode (success)', t => {
-	const {isCanceled} = execaSync('noop.js');
+	const {isCanceled} = execaSync('noop.mjs');
 	t.false(isCanceled);
 });
 
 test('result.isCanceled is false when spawned.cancel() isn\'t called in sync mode (failure)', t => {
 	const {isCanceled} = t.throws(() => {
-		execaSync('fail.js');
+		execaSync('fail.mjs');
 	});
 	t.false(isCanceled);
 });
 
 test('calling cancel method throws an error with message "Command was canceled"', async t => {
-	const subprocess = execa('noop.js');
+	const subprocess = execa('noop.mjs');
 	subprocess.cancel();
 	await t.throwsAsync(subprocess, {message: /Command was canceled/});
 });
 
 test('error.isCanceled is true when cancel method is used', async t => {
-	const subprocess = execa('noop.js');
+	const subprocess = execa('noop.mjs');
 	subprocess.cancel();
 	const {isCanceled} = await t.throwsAsync(subprocess);
 	t.true(isCanceled);
 });
 
 test('error.isCanceled is false when kill method is used', async t => {
-	const subprocess = execa('noop.js');
+	const subprocess = execa('noop.mjs');
 	subprocess.kill();
 	const {isCanceled} = await t.throwsAsync(subprocess);
 	t.false(isCanceled);
 });
 
 test('calling cancel method twice should show the same behaviour as calling it once', async t => {
-	const subprocess = execa('noop.js');
+	const subprocess = execa('noop.mjs');
 	subprocess.cancel();
 	subprocess.cancel();
 	const {isCanceled} = await t.throwsAsync(subprocess);
@@ -249,14 +250,14 @@ test('calling cancel method twice should show the same behaviour as calling it o
 });
 
 test('calling cancel method on a successfully completed process does not make result.isCanceled true', async t => {
-	const subprocess = execa('noop.js');
+	const subprocess = execa('noop.mjs');
 	const {isCanceled} = await subprocess;
 	subprocess.cancel();
 	t.false(isCanceled);
 });
 
 test('calling cancel method on a process which has been killed does not make error.isCanceled true', async t => {
-	const subprocess = execa('noop.js');
+	const subprocess = execa('noop.mjs');
 	subprocess.kill();
 	const {isCanceled} = await t.throwsAsync(subprocess);
 	t.false(isCanceled);
@@ -265,14 +266,14 @@ test('calling cancel method on a process which has been killed does not make err
 if (globalThis.AbortController !== undefined) {
 	test('calling abort throws an error with message "Command was canceled"', async t => {
 		const abortController = new AbortController();
-		const subprocess = execa('noop.js', [], {signal: abortController.signal});
+		const subprocess = execa('noop.mjs', [], {signal: abortController.signal});
 		abortController.abort();
 		await t.throwsAsync(subprocess, {message: /Command was canceled/});
 	});
 
 	test('calling abort twice should show the same behaviour as calling it once', async t => {
 		const abortController = new AbortController();
-		const subprocess = execa('noop.js', [], {signal: abortController.signal});
+		const subprocess = execa('noop.mjs', [], {signal: abortController.signal});
 		abortController.abort();
 		abortController.abort();
 		const {isCanceled} = await t.throwsAsync(subprocess);
@@ -282,7 +283,7 @@ if (globalThis.AbortController !== undefined) {
 
 	test('calling abort on a successfully completed process does not make result.isCanceled true', async t => {
 		const abortController = new AbortController();
-		const subprocess = execa('noop.js', [], {signal: abortController.signal});
+		const subprocess = execa('noop.mjs', [], {signal: abortController.signal});
 		const {isCanceled} = await subprocess;
 		abortController.abort();
 		t.false(isCanceled);
@@ -290,7 +291,7 @@ if (globalThis.AbortController !== undefined) {
 
 	test('calling cancel after abort should show the same behaviour as only calling cancel', async t => {
 		const abortController = new AbortController();
-		const subprocess = execa('noop.js', [], {signal: abortController.signal});
+		const subprocess = execa('noop.mjs', [], {signal: abortController.signal});
 		abortController.abort();
 		subprocess.cancel();
 		const {isCanceled} = await t.throwsAsync(subprocess);
@@ -300,7 +301,7 @@ if (globalThis.AbortController !== undefined) {
 
 	test('calling abort after cancel should show the same behaviour as only calling cancel', async t => {
 		const abortController = new AbortController();
-		const subprocess = execa('noop.js', [], {signal: abortController.signal});
+		const subprocess = execa('noop.mjs', [], {signal: abortController.signal});
 		subprocess.cancel();
 		abortController.abort();
 		const {isCanceled} = await t.throwsAsync(subprocess);

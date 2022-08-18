@@ -97,7 +97,6 @@ execa('unicorns', {input: ''});
 execa('unicorns', {input: Buffer.from('')});
 execa('unicorns', {input: process.stdin});
 execa('unicorns', {stdin: 'pipe'});
-execa('unicorns', {stdin: 'overlapped'});
 execa('unicorns', {stdin: 'ipc'});
 execa('unicorns', {stdin: 'ignore'});
 execa('unicorns', {stdin: 'inherit'});
@@ -105,7 +104,6 @@ execa('unicorns', {stdin: process.stdin});
 execa('unicorns', {stdin: 1});
 execa('unicorns', {stdin: undefined});
 execa('unicorns', {stdout: 'pipe'});
-execa('unicorns', {stdout: 'overlapped'});
 execa('unicorns', {stdout: 'ipc'});
 execa('unicorns', {stdout: 'ignore'});
 execa('unicorns', {stdout: 'inherit'});
@@ -113,7 +111,6 @@ execa('unicorns', {stdout: process.stdout});
 execa('unicorns', {stdout: 1});
 execa('unicorns', {stdout: undefined});
 execa('unicorns', {stderr: 'pipe'});
-execa('unicorns', {stderr: 'overlapped'});
 execa('unicorns', {stderr: 'ipc'});
 execa('unicorns', {stderr: 'ignore'});
 execa('unicorns', {stderr: 'inherit'});
@@ -130,11 +127,10 @@ execa('unicorns', {cwd: new URL('file:///test')});
 execa('unicorns', {env: {PATH: ''}});
 execa('unicorns', {argv0: ''});
 execa('unicorns', {stdio: 'pipe'});
-execa('unicorns', {stdio: 'overlapped'});
 execa('unicorns', {stdio: 'ignore'});
 execa('unicorns', {stdio: 'inherit'});
 execa('unicorns', {
-	stdio: ['pipe', 'overlapped', 'ipc', 'ignore', 'inherit', process.stdin, 1, undefined],
+	stdio: ['pipe', 'ipc', 'ignore', 'inherit', process.stdin, 1, undefined],
 });
 execa('unicorns', {serialization: 'advanced'});
 execa('unicorns', {detached: true});
