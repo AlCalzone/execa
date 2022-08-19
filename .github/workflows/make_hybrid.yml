@@ -38,6 +38,8 @@ jobs:
         ls -la
 
     - name: Convert to CommonJS/ESM Hybrid
+      env:
+        TAG: ${{ github.event.inputs.tag }}
       run: bash .github/make_hybrid.sh
 
     - name: Test that both import and require work

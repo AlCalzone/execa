@@ -57,3 +57,5 @@ jobs:
         workflow: Publish
         token: ${{ secrets.REPO_ACCESS_TOKEN }}
         inputs: '{"tag":"${{steps.check-tag.outputs.tag}}"}'
+        wait-for-completion: true
+        wait-for-completion-interval: 30s
