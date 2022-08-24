@@ -34,7 +34,7 @@ jobs:
         git remote add upstream ${UPSTREAM_REPO_URL}
         git fetch upstream
         # The tag without suffix only exists on upstream, so we check it out directly
-        git restore --source=$TAG -- . ':!.github' ':!readme.md'
+        git restore --source=$TAG -- . ':!.github' ':!README.md' ':!readme.md'
         ls -la
 
     - name: Convert to CommonJS/ESM Hybrid
@@ -103,7 +103,7 @@ jobs:
         git config --global user.name "${GIT_USER}"
         git config --global user.email "${GIT_EMAIL}"
 
-        git add -A -- ':!.github/*' ':!readme.md'
+        git add -A -- ':!.github/*' ':!README.md' ':!readme.md'
         git commit -m "update repository with upstream changes"
         # our tags have a suffix to distinguish them from upstream
         git tag "$TAG-cjs"

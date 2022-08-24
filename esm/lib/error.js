@@ -1,4 +1,4 @@
-import {signalsByName} from 'human-signals';
+import {signalsByName} from '@esm2cjs/human-signals';
 
 const getErrorPrefix = ({timedOut, timeout, errorCode, signal, signalDescription, exitCode, isCanceled}) => {
 	if (timedOut) {

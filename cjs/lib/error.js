@@ -20,7 +20,7 @@ __export(error_exports, {
   makeError: () => makeError
 });
 module.exports = __toCommonJS(error_exports);
-var import_human_signals = require("human-signals");
+var import_human_signals = require("@esm2cjs/human-signals");
 const getErrorPrefix = ({ timedOut, timeout, errorCode, signal, signalDescription, exitCode, isCanceled }) => {
   if (timedOut) {
     return `timed out after ${timeout} milliseconds`;

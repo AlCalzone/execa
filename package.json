@@ -1,6 +1,6 @@
 {
 	"name": "@esm2cjs/execa",
-	"version": "6.1.1-cjs.0",
+	"version": "6.1.1-cjs.1",
 	"description": "Process execution for humans. This is a fork of sindresorhus/execa, but with CommonJS support.",
 	"license": "MIT",
 	"repository": "esm2cjs/execa",

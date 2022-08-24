@@ -32,7 +32,7 @@ npm i @esm2cjs/execa
 
 > **Note:**
 > We strive to use the same versions as the upstream package, but unfortunately there is a bit of a learning curve with these things.
-> As a result, we had to re-publish `6.1.0` as `6.1.1-cjs.0`.
+> As a result, we had to re-publish `6.1.0` as `6.1.1-cjs.1`.
 
 ## Usage
 

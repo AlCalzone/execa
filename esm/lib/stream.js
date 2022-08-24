@@ -1,4 +1,4 @@
-import {isStream} from 'is-stream';
+import {isStream} from '@esm2cjs/is-stream';
 import getStream from 'get-stream';
 import mergeStream from 'merge-stream';
 

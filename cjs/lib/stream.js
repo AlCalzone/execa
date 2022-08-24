@@ -29,7 +29,7 @@ __export(stream_exports, {
   validateInputSync: () => validateInputSync
 });
 module.exports = __toCommonJS(stream_exports);
-var import_is_stream = require("is-stream");
+var import_is_stream = require("@esm2cjs/is-stream");
 var import_get_stream = __toESM(require("get-stream"));
 var import_merge_stream = __toESM(require("merge-stream"));
 const handleInput = (spawned, input) => {

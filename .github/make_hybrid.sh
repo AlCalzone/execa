@@ -8,22 +8,36 @@ mv index.js esm/index.js
 mv index.d.ts esm/index.d.ts
 mv index.test-d.ts esm/index.test-d.ts
 
-# Replace module imports in all js files
-modules=( human-signals, is-stream, npm-run-path, onetime, strip-final-newline )
-for file in {esm,test}{,/**}/*.js ; do
-	for mod in "${modules[@]}" ; do
-		sed -i "s#'$mod'#'@esm2cjs/$mod'#g" "$file"
+# Replace module imports in all ts files
+readarray -d '' files < <(find {esm,test} \( -name "*.js" -o -name "*.d.ts" \) -print0)
+function replace_imports () {
+	from=$1
+	to="${2:-@esm2cjs/$from}"
+	for file in "${files[@]}" ; do
+		sed -i "s#'$from'#'$to'#g" "$file"
 	done
+}
+
+replace_imports "human-signals"
+replace_imports "is-stream"
+replace_imports "npm-run-path"
+replace_imports "onetime"
+replace_imports "strip-final-newline"
+
+modules=( human-signals, is-stream, npm-run-path, onetime, strip-final-newline )
+for mod in "${modules[@]}" ; do
+	replace_imports "$mod"
 done
 
-
-# patch test files to be ESM and look in the right places
-for file in test{,/**}/*.js ; do
-	sed -i "s#.js#.mjs#g" "$file"
-	sed -i -E "s#../lib/([a-zA-Z0-9]+).mjs'#../esm/lib/\1.js'#g" "$file"
-	sed -i "s#../index.mjs'#../esm/index.js'#g" "$file"
+# Fix tests
+echo '{"type":"module"}' > test/package.json
+readarray -d '' files < <(find test \( -name "*.js" -o -name "*.d.ts" \) -print0)
+for file in "${files[@]}" ; do
+	sed -i "s#\.js#.mjs#g" "$file"
+	sed -i -E "s#'((\.\./)+)([^']+).mjs'#'\1esm/\3.js'#g" "$file"
 	mv -- "$file" "${file%.js}.mjs"
 done
+
 
 PJSON=$(cat package.json | jq --tab '
 	del(.type)
