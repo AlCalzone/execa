@@ -1,0 +1,19 @@
+name: Check upstream for new release (cron)
+on:
+  schedule:
+    # check each night at 1 AM
+    - cron: '00 01 * * *'
+
+jobs:
+  check-releases:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Trigger check and wait
+      uses: aurelien-baudet/workflow-dispatch@v2
+      with:
+        workflow: Check upstream for new release
+        token: ${{ secrets.REPO_ACCESS_TOKEN }}
+        wait-for-completion: true
+        wait-for-completion-interval: 30s
+        display-workflow-run-url: false
